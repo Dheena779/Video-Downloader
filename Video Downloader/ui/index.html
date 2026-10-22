@@ -1,0 +1,1347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OmniStream PRO</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0b0f17;--card:rgba(18,24,38,.75);--border:rgba(255,255,255,.08);
+  --cyan:#06b6d4;--blue:#3b82f6;--violet:#8b5cf6;--green:#10b981;
+  --amber:#f59e0b;--rose:#f43f5e;--orange:#f97316;
+  --t1:#f1f5f9;--t2:#94a3b8;--t3:#64748b;
+  --ig-grad:linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888);
+  --tor-grad:linear-gradient(135deg,#10b981,#06b6d4);
+}
+body{font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  background:var(--bg);color:var(--t1);height:100vh;overflow:hidden;
+  display:flex;flex-direction:column;user-select:none;position:relative}
+.glow{position:absolute;pointer-events:none;z-index:0;border-radius:50%}
+.g1{top:-100px;left:-80px;width:480px;height:480px;background:radial-gradient(circle,rgba(6,182,212,.14) 0%,transparent 70%)}
+.g2{bottom:-120px;right:-100px;width:540px;height:540px;background:radial-gradient(circle,rgba(139,92,246,.13) 0%,transparent 70%)}
+
+/* titlebar */
+.titlebar{height:46px;background:rgba(11,15,23,.88);backdrop-filter:blur(18px);
+  border-bottom:1px solid var(--border);display:flex;align-items:center;
+  justify-content:space-between;padding:0 14px;z-index:50;flex-shrink:0}
+.drag{flex:1;height:100%;display:flex;align-items:center;gap:12px;cursor:grab}
+.brand{display:flex;align-items:center;gap:9px}
+.logo{width:26px;height:26px;border-radius:7px;background:linear-gradient(135deg,#06b6d4,#8b5cf6);
+  display:flex;align-items:center;justify-content:center;box-shadow:0 0 12px rgba(6,182,212,.5)}
+.app-name{font-size:13.5px;font-weight:700;color:#fff;letter-spacing:.4px}
+.badge{font-size:9.5px;font-weight:800;padding:2px 5px;border-radius:3px;
+  background:linear-gradient(135deg,#06b6d4,#3b82f6);color:#fff;text-transform:uppercase;letter-spacing:.7px}
+
+/* nav tabs */
+.nav-tabs{display:flex;align-items:center;gap:5px;margin-left:16px}
+.tab-btn{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);color:var(--t2);
+  border-radius:6px;padding:5px 11px;font-size:11px;font-weight:600;cursor:pointer;
+  display:flex;align-items:center;gap:6px;transition:.2s}
+.tab-btn:hover{background:rgba(255,255,255,.1);color:#fff}
+.tab-btn.active{background:rgba(6,182,212,.18);border-color:rgba(6,182,212,.4);color:var(--cyan);box-shadow:0 0 12px rgba(6,182,212,.25)}
+.tab-btn.ig.active{background:rgba(220,39,67,.2);border-color:rgba(220,39,67,.5);color:#f43f5e;box-shadow:0 0 12px rgba(220,39,67,.3)}
+.tab-btn.tor.active{background:rgba(16,185,129,.2);border-color:rgba(16,185,129,.5);color:var(--green);box-shadow:0 0 12px rgba(16,185,129,.3)}
+.tab-btn.ext.active{background:rgba(139,92,246,.18);border-color:rgba(139,92,246,.4);color:#a78bfa}
+
+.wc{display:flex;gap:5px}
+.wb{width:30px;height:26px;border:none;background:0;color:var(--t2);border-radius:5px;
+  display:flex;align-items:center;justify-content:center;cursor:pointer;transition:.15s}
+.wb:hover{background:rgba(255,255,255,.08);color:#fff}
+.wb.x:hover{background:#ef4444;color:#fff}
+
+/* main */
+.main{flex:1;overflow-y:auto;padding:18px 24px;display:flex;flex-direction:column;gap:18px;position:relative;z-index:10}
+.main::-webkit-scrollbar{width:6px}
+.main::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:3px}
+.tab-page{display:none;flex-direction:column;gap:18px}
+.tab-page.active{display:flex}
+
+/* glass */
+.glass{background:var(--card);backdrop-filter:blur(22px);border:1px solid var(--border);
+  border-radius:13px;padding:16px 18px;box-shadow:0 8px 28px -8px rgba(0,0,0,.5);transition:.25s}
+
+/* input bar */
+.iw{display:flex;align-items:center;background:rgba(13,19,32,.88);border:1px solid rgba(255,255,255,.1);
+  border-radius:11px;padding:5px 7px 5px 13px;gap:9px;box-shadow:0 4px 18px rgba(0,0,0,.3);transition:.25s}
+.iw:focus-within{border-color:var(--cyan);box-shadow:0 0 0 3px rgba(6,182,212,.18),0 6px 22px rgba(0,0,0,.4)}
+.iw.ig-focus:focus-within{border-color:#e1306c;box-shadow:0 0 0 3px rgba(225,48,108,.2)}
+.iw.tor-focus:focus-within{border-color:var(--green);box-shadow:0 0 0 3px rgba(16,185,129,.18)}
+.si{flex:1;background:0;border:0;outline:0;font-size:13.5px;color:#fff}
+.si::placeholder{color:var(--t3)}
+
+/* buttons */
+.btn-sm{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);color:var(--t2);
+  border-radius:7px;padding:6px 11px;font-size:11.5px;font-weight:500;cursor:pointer;
+  display:flex;align-items:center;gap:5px;transition:.2s}
+.btn-sm:hover{background:rgba(255,255,255,.12);color:#fff}
+.btn-sm:disabled{opacity:.5;cursor:not-allowed}
+.fetch{background:linear-gradient(135deg,#06b6d4,#3b82f6);border:0;color:#fff;font-size:12.5px;
+  font-weight:600;border-radius:7px;padding:9px 18px;cursor:pointer;display:flex;align-items:center;
+  gap:7px;box-shadow:0 4px 12px rgba(6,182,212,.35);transition:.2s}
+.fetch:hover{box-shadow:0 6px 18px rgba(6,182,212,.55);transform:translateY(-1px)}
+.fetch.ig-btn{background:var(--ig-grad);box-shadow:0 4px 12px rgba(220,39,67,.4)}
+.fetch.ig-btn:hover{box-shadow:0 6px 18px rgba(220,39,67,.6)}
+.fetch.tor-btn{background:var(--tor-grad);box-shadow:0 4px 12px rgba(16,185,129,.35)}
+.fetch.tor-btn:hover{box-shadow:0 6px 18px rgba(16,185,129,.55);transform:translateY(-1px)}
+.fetch:disabled{opacity:.55;cursor:not-allowed;transform:none}
+
+/* chips */
+.chips{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.clbl{font-size:10.5px;color:var(--t3);font-weight:600;text-transform:uppercase;letter-spacing:.4px}
+.chip{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:18px;
+  padding:3px 10px;font-size:10.5px;color:var(--t2);cursor:pointer;transition:.2s}
+.chip:hover{background:rgba(6,182,212,.1);border-color:rgba(6,182,212,.3);color:var(--cyan)}
+
+/* controls bar */
+.cbar{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;
+  padding:10px 16px;background:rgba(14,20,33,.68);border-radius:11px;border:1px solid var(--border)}
+.tg{display:flex;align-items:center;gap:9px;cursor:pointer}
+.ts{position:relative;width:36px;height:20px;background:rgba(255,255,255,.14);border-radius:10px;transition:.25s}
+.ts.on{background:var(--cyan);box-shadow:0 0 8px rgba(6,182,212,.5)}
+.th{position:absolute;top:2px;left:2px;width:16px;height:16px;background:#fff;border-radius:50%;transition:.25s}
+.ts.on .th{transform:translateX(16px)}
+.tt{font-size:11.5px;font-weight:500;display:flex;align-items:center;gap:5px}
+.tb{font-size:9.5px;padding:2px 5px;border-radius:3px;background:rgba(6,182,212,.14);
+  color:var(--cyan);border:1px solid rgba(6,182,212,.28)}
+.sg{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:11.5px}
+.sel{background:rgba(0,0,0,.32);border:1px solid rgba(255,255,255,.1);color:var(--t1);
+  font-size:10.5px;padding:4px 7px;border-radius:5px;outline:0;cursor:pointer}
+.fp{max-width:190px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  color:var(--t3);background:rgba(0,0,0,.22);padding:3px 8px;border-radius:5px;font-family:monospace;font-size:10.5px}
+
+/* result panel */
+.result{display:none;flex-direction:column;gap:14px}
+.result.show{display:flex}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.anim{animation:fadeUp .3s ease forwards}
+
+/* video header card */
+.vhc{display:flex;gap:16px;align-items:center;background:rgba(18,26,42,.82);border-radius:11px;
+  padding:12px;border:1px solid rgba(255,255,255,.07)}
+.thbox{width:160px;height:90px;border-radius:7px;overflow:hidden;position:relative;background:#000;
+  flex-shrink:0;border:1px solid rgba(255,255,255,.08)}
+.thimg{width:100%;height:100%;object-fit:cover}
+.dur{position:absolute;bottom:5px;right:5px;background:rgba(0,0,0,.82);font-size:9.5px;
+  font-weight:600;padding:1px 4px;border-radius:3px;color:#fff}
+.vdet{flex:1;display:flex;flex-direction:column;gap:5px;min-width:0}
+.vtitle{font-size:14.5px;font-weight:600;line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#fff}
+.vmeta{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.mc{font-size:10.5px;padding:2px 7px;border-radius:4px;background:rgba(255,255,255,.05);color:var(--t2);border:1px solid rgba(255,255,255,.05)}
+.mc.hl{background:rgba(6,182,212,.14);color:var(--cyan);border-color:rgba(6,182,212,.28)}
+
+/* quality grid */
+.strow{display:flex;align-items:center;justify-content:space-between}
+.stitle{font-size:13.5px;font-weight:700;color:#fff;display:flex;align-items:center;gap:7px}
+.qbadge{font-size:10.5px;padding:2px 6px;border-radius:10px;background:rgba(59,130,246,.18);color:#60a5fa;font-weight:600}
+.qgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:10px}
+.qcard{background:rgba(16,22,36,.72);border:1px solid rgba(255,255,255,.06);border-radius:9px;
+  padding:12px 14px;display:flex;flex-direction:column;gap:10px;
+  transition:all .2s cubic-bezier(.16,1,.3,1);position:relative;overflow:hidden}
+.qcard:hover{background:rgba(22,31,50,.88);border-color:rgba(6,182,212,.4);
+  transform:translateY(-2px);box-shadow:0 6px 20px -4px rgba(6,182,212,.22)}
+.qcard.single{grid-column:1/-1;border-color:rgba(6,182,212,.35);background:rgba(14,28,48,.65)}
+.qt{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+.qr{display:flex;flex-direction:column;gap:3px}
+.ql{font-size:13.5px;font-weight:700;color:#fff;display:flex;align-items:center;gap:5px}
+.qs{font-size:10.5px;color:var(--t3)}
+.qp{font-size:9.5px;font-weight:700;padding:2px 6px;border-radius:3px;background:rgba(255,255,255,.07);color:var(--t2);letter-spacing:.4px}
+.qp.hd{background:rgba(6,182,212,.18);color:var(--cyan)}
+.qp.uhd{background:rgba(139,92,246,.22);color:#c084fc}
+.qp.au{background:rgba(16,185,129,.18);color:var(--green)}
+.qm{display:flex;align-items:center;justify-content:space-between;font-size:10.5px;
+  color:var(--t2);border-top:1px solid rgba(255,255,255,.04);padding-top:8px}
+.qmi{display:flex;align-items:center;gap:4px}
+.qbtn{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:#fff;
+  font-size:11.5px;font-weight:600;border-radius:6px;padding:7px 12px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;gap:7px;transition:.2s;width:100%}
+.qbtn:hover{background:linear-gradient(135deg,#06b6d4,#3b82f6);border-color:transparent;
+  box-shadow:0 4px 12px rgba(6,182,212,.38)}
+
+/* download cards */
+.dllist{display:flex;flex-direction:column;gap:9px}
+.dlc{background:rgba(16,22,35,.82);border:1px solid rgba(255,255,255,.07);border-radius:9px;
+  padding:12px 14px;display:flex;flex-direction:column;gap:8px;animation:fadeUp .22s ease forwards}
+.dlh{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.dltb{flex:1;min-width:0;display:flex;align-items:center;gap:7px}
+.dlt{font-size:12.5px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dlsc{font-size:9.5px;font-weight:700;padding:2px 5px;border-radius:3px;text-transform:uppercase;letter-spacing:.4px}
+.dlsc.dl{background:rgba(6,182,212,.14);color:var(--cyan)}
+.dlsc.pr{background:rgba(245,158,11,.14);color:#fbbf24}
+.dlsc.ok{background:rgba(16,185,129,.16);color:var(--green)}
+.dlsc.er{background:rgba(244,63,94,.16);color:var(--rose)}
+.dlsc.cn{background:rgba(148,163,184,.16);color:#94a3b8}
+.dlpt{width:100%;height:5px;background:rgba(255,255,255,.06);border-radius:3px;overflow:hidden}
+.dlpb{height:100%;background:linear-gradient(90deg,#06b6d4,#3b82f6);border-radius:3px;
+  width:0%;transition:width .25s linear;box-shadow:0 0 8px rgba(6,182,212,.45)}
+.dlpb.ok{background:var(--green);box-shadow:0 0 8px rgba(16,185,129,.45)}
+.dlsr{display:flex;align-items:center;justify-content:space-between;font-size:10.5px;color:var(--t3)}
+.dla{display:flex;align-items:center;gap:7px}
+.dlab{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.07);color:var(--t2);
+  border-radius:5px;padding:4px 9px;font-size:10.5px;font-weight:500;cursor:pointer;
+  display:flex;align-items:center;gap:4px;transition:.2s}
+.dlab:hover{background:rgba(255,255,255,.1);color:#fff}
+.dlab.pr{background:rgba(6,182,212,.14);border-color:rgba(6,182,212,.28);color:var(--cyan)}
+.dlab.pr:hover{background:var(--cyan);color:#000}
+
+/* ---- INSTAGRAM HUB ---- */
+.ig-profile-card{display:none;background:rgba(18,24,38,.85);border:1px solid rgba(255,255,255,.08);
+  border-radius:13px;padding:18px;gap:18px;animation:fadeUp .3s ease forwards;flex-direction:row}
+.ig-profile-card.show{display:flex}
+.ig-avatar-box{width:96px;height:96px;border-radius:50%;padding:3px;background:var(--ig-grad);
+  flex-shrink:0;box-shadow:0 0 16px rgba(220,39,67,.3)}
+.ig-avatar-img{width:100%;height:100%;border-radius:50%;object-fit:cover;background:#1e293b;border:2px solid #0b0f17;cursor:pointer}
+.ig-info{flex:1;display:flex;flex-direction:column;gap:8px}
+.ig-user-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.ig-uname{font-size:18px;font-weight:700;color:#fff}
+.ig-badge-verified{background:#3b82f6;color:#fff;border-radius:50%;width:16px;height:16px;display:inline-flex;align-items:center;justify-content:center;font-size:10px}
+.ig-stats-row{display:flex;align-items:center;gap:18px;font-size:12.5px;color:var(--t2)}
+.ig-stat b{color:#fff;font-weight:700}
+.ig-bio{font-size:12px;color:var(--t2);line-height:1.4}
+.ig-warn{font-size:11px;color:var(--amber);background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.2);
+  border-radius:6px;padding:8px 12px;line-height:1.5}
+.ig-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:14px}
+.ig-card{background:rgba(16,22,36,.75);border:1px solid rgba(255,255,255,.08);
+  border-radius:10px;overflow:hidden;display:flex;flex-direction:column;transition:all .2s ease}
+.ig-card:hover{border-color:rgba(220,39,67,.4);transform:translateY(-2px);box-shadow:0 8px 24px -6px rgba(220,39,67,.25)}
+.ig-media-thumb{width:100%;height:180px;position:relative;background:#000;overflow:hidden;cursor:pointer}
+.ig-thumb-img{width:100%;height:100%;object-fit:cover;transition:.3s}
+.ig-card:hover .ig-thumb-img{transform:scale(1.04)}
+.ig-type-tag{position:absolute;top:8px;right:8px;background:rgba(0,0,0,.75);backdrop-filter:blur(6px);
+  font-size:9.5px;font-weight:700;padding:2px 6px;border-radius:4px;color:#fff;letter-spacing:.5px}
+.ig-card-body{padding:10px 12px;display:flex;flex-direction:column;gap:8px;flex:1;justify-content:space-between}
+.ig-card-stats{display:flex;align-items:center;justify-content:space-between;font-size:10.5px;color:var(--t3)}
+.ig-card-caption{font-size:11px;color:var(--t2);line-height:1.3;max-height:30px;overflow:hidden}
+.ig-dl-btn{background:var(--ig-grad);border:none;color:#fff;font-size:11px;font-weight:600;
+  border-radius:6px;padding:7px;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  gap:6px;box-shadow:0 4px 12px rgba(220,39,67,.3);transition:.2s}
+.ig-dl-btn:hover{opacity:.9;transform:scale(1.01)}
+.ig-action-row{display:flex;gap:6px}
+.ig-open-btn{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);color:var(--t2);
+  font-size:10px;border-radius:6px;padding:5px 8px;cursor:pointer;flex:1;display:flex;align-items:center;justify-content:center;gap:4px;transition:.2s}
+.ig-open-btn:hover{background:rgba(255,255,255,.12);color:#fff}
+
+/* ---- TORRENT TAB ---- */
+.tor-drop-zone{border:2px dashed rgba(16,185,129,.35);border-radius:12px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:10px;padding:30px;cursor:pointer;transition:.25s;background:rgba(16,185,129,.04)}
+.tor-drop-zone:hover,.tor-drop-zone.drag-over{border-color:var(--green);background:rgba(16,185,129,.1)}
+.tor-drop-icon{width:48px;height:48px;border-radius:12px;background:var(--tor-grad);
+  display:flex;align-items:center;justify-content:center;box-shadow:0 0 16px rgba(16,185,129,.4)}
+.tor-info-card{display:none;flex-direction:column;gap:14px;animation:fadeUp .3s ease}
+.tor-info-card.show{display:flex}
+.tor-meta-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.tor-meta-item{background:rgba(14,20,33,.7);border:1px solid var(--border);border-radius:8px;padding:10px 14px}
+.tor-meta-label{font-size:10px;color:var(--t3);font-weight:600;text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px}
+.tor-meta-value{font-size:13px;color:#fff;font-weight:600;word-break:break-all}
+.tor-file-list{display:flex;flex-direction:column;gap:6px;max-height:200px;overflow-y:auto}
+.tor-file-item{display:flex;align-items:center;justify-content:space-between;
+  background:rgba(14,20,33,.5);border:1px solid var(--border);border-radius:7px;padding:8px 12px}
+.tor-file-name{font-size:11px;color:var(--t1);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tor-file-size{font-size:10px;color:var(--t3);flex-shrink:0;margin-left:8px}
+.tor-dl-btn{background:var(--tor-grad);border:none;color:#fff;font-size:13px;font-weight:700;
+  border-radius:9px;padding:12px 28px;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  gap:9px;box-shadow:0 4px 16px rgba(16,185,129,.4);transition:.2s;width:100%}
+.tor-dl-btn:hover{box-shadow:0 6px 22px rgba(16,185,129,.6);transform:translateY(-1px)}
+.tor-dl-btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.aria2-banner{display:flex;align-items:center;gap:12px;background:rgba(245,158,11,.08);
+  border:1px solid rgba(245,158,11,.25);border-radius:9px;padding:10px 14px}
+.aria2-banner.ok{background:rgba(16,185,129,.08);border-color:rgba(16,185,129,.25)}
+.aria2-status-dot{width:8px;height:8px;border-radius:50%;background:var(--amber);flex-shrink:0}
+.aria2-status-dot.ok{background:var(--green)}
+
+/* EXTENSION TAB */
+.ext-status-card{display:flex;align-items:center;justify-content:space-between;
+  background:rgba(18,26,42,.85);border:1px solid rgba(6,182,212,.3);border-radius:12px;padding:16px 20px}
+.ext-status-left{display:flex;align-items:center;gap:14px}
+.ext-icon{width:42px;height:42px;border-radius:10px;background:linear-gradient(135deg,#06b6d4,#8b5cf6);display:flex;align-items:center;justify-content:center}
+.ext-steps-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
+.ext-step-card{background:rgba(16,22,35,.75);border:1px solid var(--border);border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:8px}
+.step-num{width:24px;height:24px;border-radius:50%;background:var(--cyan);color:#000;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center}
+
+/* stream intercept toast */
+.stream-toast{position:fixed;top:54px;left:50%;transform:translateX(-50%);
+  background:rgba(18,26,44,.95);backdrop-filter:blur(20px);
+  border:1px solid var(--cyan);box-shadow:0 8px 30px rgba(6,182,212,.4);
+  border-radius:10px;padding:10px 18px;display:none;align-items:center;gap:14px;
+  z-index:200;animation:fadeUp .3s ease;max-width:90%}
+
+/* general toast */
+.toast{position:fixed;bottom:18px;right:22px;background:rgba(24,16,26,.94);
+  border:1px solid rgba(244,63,94,.38);color:#fda4af;padding:10px 16px;border-radius:7px;
+  font-size:11.5px;display:none;align-items:center;gap:9px;box-shadow:0 8px 26px rgba(0,0,0,.55);
+  z-index:100;max-width:480px;animation:fadeUp .22s ease}
+.toast.ok{border-color:rgba(16,185,129,.38);color:#6ee7b7;background:rgba(16,26,20,.94)}
+
+.spin{width:13px;height:13px;border:2px solid rgba(255,255,255,.22);border-top-color:#fff;
+  border-radius:50%;animation:sp .65s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.ph{text-align:center;padding:22px 0;color:var(--t3);font-size:12.5px}
+
+/* hidden file input */
+#torrentFileInput{display:none}
+
+/* Highlights styling */
+.ig-highlights-grid{display:flex;gap:14px;overflow-x:auto;padding:6px 2px 12px}
+.ig-highlights-grid::-webkit-scrollbar{height:5px}
+.ig-highlights-grid::-webkit-scrollbar-thumb{background:rgba(255,255,255,.15);border-radius:3px}
+.ig-hl-card{display:flex;flex-direction:column;align-items:center;gap:6px;min-width:86px;max-width:96px;text-align:center;cursor:pointer;transition:.2s}
+.ig-hl-card:hover{transform:translateY(-2px)}
+.ig-hl-ring{width:68px;height:68px;border-radius:50%;padding:2.5px;background:var(--ig-grad);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 12px rgba(220,39,67,.3)}
+.ig-hl-cover{width:100%;height:100%;border-radius:50%;object-fit:cover;border:2px solid var(--bg);background:#182234}
+.ig-hl-title{font-size:11px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:84px}
+.ig-hl-dl-btn{font-size:9.5px;padding:3px 9px;border-radius:10px;background:rgba(245,158,11,.15);color:#fbbf24;border:1px solid rgba(245,158,11,.3);cursor:pointer;transition:.15s;font-weight:600}
+.ig-hl-dl-btn:hover{background:#f59e0b;color:#000}
+.photo-tag{background:rgba(6,182,212,.8)!important;color:#fff!important}
+
+/* FULL RESPONSIVE DESIGN & LANDING PAGE */
+.container-responsive{width:100%;max-width:1400px;margin:0 auto}
+@media (max-width: 1024px){
+  .main{padding:14px 16px;gap:14px}
+  .vhc{flex-direction:column;align-items:flex-start}
+  .vhc .vthumb{width:100%!important;height:220px!important}
+  .qgrid{grid-template-columns:repeat(auto-fill,minmax(240px,1fr))}
+  .ig-grid{grid-template-columns:repeat(auto-fill,minmax(180px,1fr))}
+  .ext-steps-grid{grid-template-columns:1fr}
+}
+@media (max-width: 768px){
+  .titlebar{height:auto;padding:8px 10px;flex-wrap:wrap;gap:8px}
+  .drag{flex-wrap:wrap;gap:8px}
+  .nav-tabs{margin-left:0;width:100%;overflow-x:auto;padding-bottom:4px}
+  .tab-btn{padding:4px 8px;font-size:10px}
+  .main{padding:10px 12px;gap:12px}
+  .iw{flex-wrap:wrap;padding:8px}
+  .iw .si{min-width:160px}
+  .cbar{flex-direction:column;align-items:flex-start;gap:8px}
+  .ig-profile-card{flex-direction:column;align-items:center;text-align:center}
+  .ig-avatar-box{margin-bottom:8px}
+  .ig-user-row{justify-content:center}
+  .ig-stats-row{justify-content:center}
+  .tor-meta-grid{grid-template-columns:1fr}
+}
+@media (min-width: 1600px){
+  .main{max-width:1560px;margin:0 auto;width:100%}
+  .qgrid{grid-template-columns:repeat(auto-fill,minmax(320px,1fr))}
+  .ig-grid{grid-template-columns:repeat(auto-fill,minmax(250px,1fr))}
+}
+</style>
+</head>
+<body>
+<div class="glow g1"></div>
+<div class="glow g2"></div>
+
+<!-- Titlebar -->
+<header class="titlebar" onmousedown="handleHeaderMouseDown(event)" ondblclick="handleHeaderDblClick(event)">
+  <div class="drag pywebview-drag-region" onmousedown="handleHeaderMouseDown(event)" ondblclick="handleHeaderDblClick(event)">
+    <div class="brand">
+      <div class="logo"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg></div>
+      <span class="app-name">OmniStream</span>
+      <span class="badge">PRO</span>
+    </div>
+
+    <div class="nav-tabs">
+      <button class="tab-btn active" onclick="switchTab('downloader')">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        Stream
+      </button>
+      <button class="tab-btn ig" onclick="switchTab('instagram')">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+        Instagram
+      </button>
+      <button class="tab-btn tor" onclick="switchTab('torrent')">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Torrent
+      </button>
+      <button class="tab-btn ext" onclick="switchTab('extension')">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+        Extension
+      </button>
+    </div>
+  </div>
+
+  <div class="wc">
+    <button class="wb" onclick="pywebview.api.window_minimize()"><svg width="11" height="11" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none"><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
+    <button class="wb" onclick="pywebview.api.window_toggle_maximize()"><svg width="10" height="10" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none"><rect x="4" y="4" width="16" height="16" rx="2"/></svg></button>
+    <button class="wb x" onclick="pywebview.api.window_close()"><svg width="11" height="11" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+  </div>
+</header>
+
+<!-- Extension Stream Toast -->
+<div id="streamInterceptToast" class="stream-toast">
+  <div style="display:flex;align-items:center;gap:10px">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--cyan)" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+    <div style="display:flex;flex-direction:column;gap:2px">
+      <span style="font-size:12px;font-weight:700;color:#fff" id="toastStreamTitle">Stream Intercepted</span>
+      <span style="font-size:10.5px;color:var(--cyan);font-family:monospace" id="toastStreamType">.m3u8 Stream</span>
+    </div>
+  </div>
+  <button class="btn-sm" style="background:var(--cyan);color:#000;font-weight:700" onclick="acceptInterceptedStream()">Inspect & Download</button>
+  <button class="wb" style="width:24px;height:24px" onclick="dismissInterceptToast()"><svg width="11" height="11" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+</div>
+
+<main class="main">
+
+  <!-- ===== TAB 1: STREAM DOWNLOADER ===== -->
+  <div id="tabDownloader" class="tab-page active">
+    <div class="glass" style="display:flex;flex-direction:column;gap:10px">
+      <div class="iw">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--t3)" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+        <input id="url" class="si" placeholder="Paste any video URL — YouTube, Reddit, Vimeo, .m3u8, .mpd, direct .mp4, any webpage stream…" autocomplete="off" spellcheck="false">
+        <button class="btn-sm" onclick="doPaste()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>Paste</button>
+        <button id="fetchBtn" class="fetch" onclick="doFetch()"><span id="fetchTxt">Inspect Stream</span><div id="fetchSpin" class="spin" style="display:none"></div></button>
+      </div>
+      <div class="chips">
+        <span class="clbl">Try:</span>
+        <button class="chip" onclick="tryUrl('https://www.youtube.com/watch?v=dQw4w9WgXcQ')">YouTube</button>
+        <button class="chip" onclick="tryUrl('https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8')">HLS .m3u8</button>
+        <button class="chip" onclick="tryUrl('https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/360/Big_Buck_Bunny_360_10s_1MB.mp4')">Direct MP4</button>
+        <button class="chip" onclick="tryUrl('https://vimeo.com/76979871')">Vimeo</button>
+      </div>
+    </div>
+
+    <!-- Controls Bar -->
+    <div class="cbar">
+      <div class="tg" onclick="toggleMp4()">
+        <div id="mp4sw" class="ts on"><div class="th"></div></div>
+        <div class="tt"><span>Strict MP4</span><span class="tb">.ts/.webm → .mp4</span></div>
+      </div>
+      <div class="sg">
+        <span style="color:var(--t2)">Speed:</span>
+        <select id="threads" class="sel">
+          <option value="8" selected>8x Turbo</option>
+          <option value="16">16x Max</option>
+          <option value="4">4x Standard</option>
+          <option value="1">1x Sequential</option>
+        </select>
+      </div>
+      <div class="sg">
+        <span style="color:var(--t2)">Cookies:</span>
+        <select id="cookies" class="sel" onchange="onCookieChange()">
+          <option value="none">None (Direct)</option>
+          <option value="firefox">Firefox</option>
+          <option value="edge">Edge</option>
+          <option value="chrome">Chrome</option>
+          <option value="file">cookies.txt…</option>
+        </select>
+        <span id="cfdisp" style="display:none;font-size:10px;color:var(--cyan);font-family:monospace"></span>
+      </div>
+      <div class="sg">
+        <span style="color:var(--t2)">Save:</span>
+        <div id="savePath" class="fp">~/Downloads/OmniStream</div>
+        <button class="btn-sm" onclick="changeFolder()">Change</button>
+        <button class="btn-sm" onclick="openDlFolder()"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg></button>
+      </div>
+    </div>
+
+    <!-- Referer field (hidden, populated from extension) -->
+    <input id="referer" type="hidden" value="">
+
+    <!-- Result Panel -->
+    <section id="resultSec" class="result">
+      <div class="vhc anim">
+        <div class="thbox"><img id="thumb" class="thimg" src="" alt=""><div id="durBadge" class="dur">00:00</div></div>
+        <div class="vdet">
+          <h2 id="vTitle" class="vtitle">Title</h2>
+          <div class="vmeta">
+            <span id="vUp" class="mc">Uploader</span>
+            <span id="vType" class="mc hl">Stream</span>
+            <span id="vSite" class="mc">Web</span>
+            <span id="vQCnt" class="mc">Qualities</span>
+          </div>
+        </div>
+      </div>
+      <div class="strow">
+        <h3 class="stitle"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--cyan)" stroke-width="2.5"><polyline points="8 17 12 21 16 17"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.88 18.09A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.29"/></svg>Available Qualities</h3>
+        <span id="qGridBadge" class="qbadge">Original Streams</span>
+      </div>
+      <div id="qGrid" class="qgrid"></div>
+    </section>
+
+    <!-- Downloads -->
+    <section>
+      <div class="strow">
+        <h3 class="stitle"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Downloads</h3>
+        <button id="clearBtn" class="btn-sm" style="display:none" onclick="clearDone()">Clear Completed</button>
+      </div>
+      <div id="dlList" class="dllist"><div id="dlPh" class="ph">No active downloads. Paste a URL and pick a quality.</div></div>
+    </section>
+  </div>
+
+  <!-- ===== TAB 2: INSTAGRAM HUB ===== -->
+  <div id="tabInstagram" class="tab-page">
+    <div class="glass" style="display:flex;flex-direction:column;gap:12px;border-color:rgba(220,39,67,.3)">
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="width:22px;height:22px;border-radius:6px;background:var(--ig-grad);display:flex;align-items:center;justify-content:center">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/></svg>
+          </div>
+          <span style="font-size:14px;font-weight:700;color:#fff">Instagram Profile &amp; Media Explorer</span>
+        </div>
+        <span style="font-size:10.5px;color:var(--t3)">Reels • Videos • Posts • Profile Pictures</span>
+      </div>
+
+      <div class="iw ig-focus">
+        <span style="color:#e1306c;font-weight:700;font-size:14px">@</span>
+        <input id="igInput" class="si" placeholder="Enter username (e.g. natgeo) or paste any Reel / Post / Story link…" autocomplete="off" spellcheck="false">
+        <button class="btn-sm" onclick="doPasteIg()">Paste</button>
+        <button id="igFetchBtn" class="fetch ig-btn" onclick="fetchInstagramProfile()">
+          <span id="igFetchTxt">Explore Profile</span>
+          <div id="igFetchSpin" class="spin" style="display:none"></div>
+        </button>
+      </div>
+
+      <div class="chips">
+        <span class="clbl">Popular:</span>
+        <button class="chip" onclick="tryIg('natgeo')">@natgeo</button>
+        <button class="chip" onclick="tryIg('nasa')">@nasa</button>
+        <button class="chip" onclick="tryIg('instagram')">@instagram</button>
+        <button class="chip" onclick="tryIg('bbcnews')">@bbcnews</button>
+      </div>
+
+      <div style="font-size:11px;color:var(--t3);display:flex;align-items:center;gap:6px">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--t3)" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        For best results, set Cookie Auth to Chrome/Firefox (where you are logged into Instagram) using the dropdown in the Stream tab.
+      </div>
+    </div>
+
+    <!-- Profile Card -->
+    <div id="igProfileCard" class="ig-profile-card">
+      <div class="ig-avatar-box">
+        <img id="igAvatarImg" class="ig-avatar-img" referrerpolicy="no-referrer" src="" alt="Avatar" onclick="downloadIgAvatar()" title="Click to download HD avatar">
+      </div>
+      <div class="ig-info">
+        <div class="ig-user-row">
+          <span id="igUname" class="ig-uname">@username</span>
+          <span id="igVerified" class="ig-badge-verified" title="Verified" style="display:none">✓</span>
+          <button class="btn-sm" style="background:var(--ig-grad);color:#fff;border:none;margin-left:auto" onclick="downloadIgAvatar()">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="8 17 12 21 16 17"/><line x1="12" y1="12" x2="12" y2="21"/></svg>
+            Download HD Avatar
+          </button>
+        </div>
+        <div class="ig-stats-row">
+          <span class="ig-stat"><b id="igPostsCnt">0</b> posts</span>
+          <span class="ig-stat"><b id="igFollowersCnt">0</b> followers</span>
+          <span class="ig-stat"><b id="igFollowingCnt">0</b> following</span>
+        </div>
+        <div id="igFullName" style="font-size:13px;font-weight:600;color:#fff"></div>
+        <div id="igBio" class="ig-bio"></div>
+        <div id="igWarn" class="ig-warn" style="display:none"></div>
+      </div>
+    </div>
+
+    <!-- Story Highlights Section -->
+    <div id="igHighlightsSection" style="display:none;flex-direction:column;gap:10px">
+      <div class="strow">
+        <h3 class="stitle" style="font-size:13px">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
+          Story Highlights
+        </h3>
+        <span id="igHighlightsCountBadge" class="qbadge" style="background:rgba(245,158,11,.18);color:#fde68a">0 Highlights</span>
+      </div>
+      <div id="igHighlightsGrid" class="ig-highlights-grid"></div>
+    </div>
+
+    <!-- Media Gallery -->
+    <div id="igMediaSection" style="display:none;flex-direction:column;gap:12px">
+      <div class="strow">
+        <h3 class="stitle">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#f43f5e" stroke-width="2"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/></svg>
+          Profile Media &amp; Reels
+        </h3>
+        <span id="igMediaCountBadge" class="qbadge" style="background:rgba(220,39,67,.2);color:#fda4af">0 Items</span>
+      </div>
+      <div id="igGrid" class="ig-grid"></div>
+    </div>
+
+    <!-- Dedicated Instagram Active Downloads -->
+    <section id="igDlSection" style="display:none;flex-direction:column;gap:10px">
+      <div class="strow">
+        <h3 class="stitle" style="font-size:13px">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#f43f5e" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Instagram Downloads
+        </h3>
+        <button id="igClearBtn" class="btn-sm" style="display:none" onclick="clearIgDone()">Clear Completed</button>
+      </div>
+      <div id="igDlList" class="dllist"></div>
+    </section>
+
+    <!-- No media notice -->
+    <div id="igNoMediaNote" style="display:none" class="glass" style="text-align:center">
+      <div class="ph" style="padding:16px 0">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="var(--t3)" stroke-width="1.5" style="margin-bottom:8px"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/></svg>
+        <div style="font-size:13px;font-weight:600;color:var(--t2)">Profile loaded — but no media found.</div>
+        <div style="font-size:11.5px;color:var(--t3);margin-top:4px">Select <b>Chrome/Firefox/Edge</b> cookies in the Stream tab and try again, or paste a direct Reel/Post link above.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== TAB 3: TORRENT DOWNLOADER ===== -->
+  <div id="tabTorrent" class="tab-page">
+    <div class="glass" style="display:flex;flex-direction:column;gap:12px;border-color:rgba(16,185,129,.3)">
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="width:22px;height:22px;border-radius:6px;background:var(--tor-grad);display:flex;align-items:center;justify-content:center">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          </div>
+          <span style="font-size:14px;font-weight:700;color:#fff">Torrent Downloader</span>
+          <span style="font-size:10px;padding:2px 7px;border-radius:12px;background:rgba(16,185,129,.18);color:var(--green);font-weight:700">.torrent &amp; magnet://</span>
+        </div>
+      </div>
+
+      <!-- aria2c status banner -->
+      <div id="aria2Banner" class="aria2-banner">
+        <div class="aria2-status-dot" id="aria2Dot"></div>
+        <div>
+          <div id="aria2StatusText" style="font-size:12px;font-weight:600;color:var(--t1)">Checking aria2c engine…</div>
+          <div id="aria2StatusSub" style="font-size:10.5px;color:var(--t3)">aria2c is the download engine for torrents</div>
+        </div>
+        <a href="https://aria2.github.io" style="margin-left:auto;font-size:10.5px;color:var(--cyan);text-decoration:none" id="aria2Link">Download aria2c ↗</a>
+      </div>
+
+      <!-- Magnet Link input -->
+      <div class="iw tor-focus">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+        <input id="magnetInput" class="si" placeholder="Paste magnet:?xt=urn:btih:… link here and press Enter" autocomplete="off" spellcheck="false">
+        <button class="btn-sm" onclick="doPasteMagnet()"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="8" y="2" width="8" height="4" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>Paste</button>
+        <button class="fetch tor-btn" onclick="parseMagnet()"><span>Load Magnet</span></button>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="flex:1;height:1px;background:var(--border)"></div>
+        <span style="font-size:11px;color:var(--t3)">OR upload a .torrent file</span>
+        <div style="flex:1;height:1px;background:var(--border)"></div>
+      </div>
+
+      <!-- Drag & drop / file upload -->
+      <div class="tor-drop-zone" id="torDropZone" onclick="chooseTorrentFile()"
+           ondragover="event.preventDefault();this.classList.add('drag-over')"
+           ondragleave="this.classList.remove('drag-over')"
+           ondrop="handleTorrentDrop(event)">
+        <div class="tor-drop-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        </div>
+        <div style="font-size:14px;font-weight:700;color:#fff">Click to Browse or Drop .torrent file here</div>
+        <div style="font-size:11.5px;color:var(--t3)">Supports all .torrent files &amp; magnet links</div>
+      </div>
+      <input type="file" id="torrentFileInput" accept=".torrent" onchange="handleTorrentFileInput(this)">
+
+      <div style="display:flex;align-items:center;gap:8px">
+        <button class="btn-sm" onclick="chooseTorrentFile()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+          Browse .torrent File…
+        </button>
+        <span style="font-size:10.5px;color:var(--t3)" id="torFilePath"></span>
+      </div>
+    </div>
+
+    <!-- Torrent Info Card -->
+    <div id="torInfoCard" class="tor-info-card">
+      <div class="tor-meta-grid">
+        <div class="tor-meta-item">
+          <div class="tor-meta-label">Name</div>
+          <div class="tor-meta-value" id="torName">—</div>
+        </div>
+        <div class="tor-meta-item">
+          <div class="tor-meta-label">Total Size</div>
+          <div class="tor-meta-value" id="torSize">—</div>
+        </div>
+        <div class="tor-meta-item">
+          <div class="tor-meta-label">Files</div>
+          <div class="tor-meta-value" id="torFileCount">—</div>
+        </div>
+        <div class="tor-meta-item">
+          <div class="tor-meta-label">Trackers</div>
+          <div class="tor-meta-value" id="torTrackerCount">—</div>
+        </div>
+      </div>
+
+      <!-- Smart Detected Movie/Video Title & Direct Stream Search -->
+      <div id="torCleanBox" style="display:flex;align-items:center;justify-content:space-between;background:rgba(6,182,212,.08);border:1px solid rgba(6,182,212,.22);border-radius:10px;padding:12px 14px;gap:12px">
+        <div style="display:flex;flex-direction:column;gap:3px;overflow:hidden">
+          <div style="display:flex;align-items:center;gap:6px">
+            <span style="font-size:10px;color:var(--cyan);font-weight:700;letter-spacing:.5px;text-transform:uppercase">Direct Stream Auto-Finder</span>
+            <span style="font-size:9.5px;padding:1px 6px;border-radius:10px;background:rgba(6,182,212,.15);color:var(--cyan);font-weight:600">No Seeders Needed</span>
+          </div>
+          <div id="torCleanTitle" style="font-size:13px;font-weight:700;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">—</div>
+        </div>
+        <button type="button" class="btn-sm" style="background:var(--grad);color:#fff;border:none;padding:7px 14px;font-weight:700;white-space:nowrap;display:flex;align-items:center;gap:6px;cursor:pointer" onclick="findDirectStreamForTorrent()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          Find Direct Stream
+        </button>
+      </div>
+
+      <div>
+        <div class="strow" style="margin-bottom:8px">
+          <h3 class="stitle" style="font-size:12.5px">Files in Torrent</h3>
+        </div>
+        <div class="tor-file-list" id="torFileList"></div>
+      </div>
+
+      <!-- Save path -->
+      <div class="cbar">
+        <div class="sg">
+          <span style="color:var(--t2)">Save to:</span>
+          <div id="torSavePath" class="fp">~/Downloads/OmniStream</div>
+          <button class="btn-sm" onclick="changeTorFolder()">Change</button>
+          <button class="btn-sm" onclick="openTorFolder()"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg></button>
+        </div>
+      </div>
+
+      <button id="torDlBtn" class="tor-dl-btn" onclick="startTorrentDownload()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Start Download
+      </button>
+    </div>
+
+    <!-- Torrent Downloads -->
+    <section>
+      <div class="strow">
+        <h3 class="stitle"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Torrent Downloads</h3>
+        <button id="torClearBtn" class="btn-sm" style="display:none" onclick="clearTorDone()">Clear Completed</button>
+      </div>
+      <div id="torDlList" class="dllist"><div id="torDlPh" class="ph">No active torrent downloads. Load a .torrent file or magnet link above.</div></div>
+    </section>
+  </div>
+
+  <!-- ===== TAB 4: BROWSER EXTENSION ===== -->
+  <div id="tabExtension" class="tab-page">
+    <div class="ext-status-card">
+      <div class="ext-status-left">
+        <div class="ext-icon"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg></div>
+        <div>
+          <div style="font-size:14px;font-weight:700;color:#fff">OmniStream Browser Extension Bridge</div>
+          <div style="font-size:11.5px;color:var(--t2)">Local Bridge Active on <span style="color:var(--cyan);font-family:monospace">http://127.0.0.1:6890</span></div>
+        </div>
+      </div>
+      <button class="btn-sm" style="background:var(--cyan);color:#000;font-weight:700" onclick="pywebview.api.open_extension_folder()">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+        Open Extension Folder
+      </button>
+    </div>
+
+    <div class="glass" style="display:flex;flex-direction:column;gap:14px">
+      <div style="font-size:14px;font-weight:700;color:#fff">Install in Chrome, Brave, Edge &amp; Firefox (30 seconds)</div>
+      <div class="ext-steps-grid">
+        <div class="ext-step-card">
+          <div style="display:flex;align-items:center;gap:10px"><span class="step-num">1</span><span style="font-size:13px;font-weight:700;color:#fff">Open Extensions Page</span></div>
+          <p style="font-size:11.5px;color:var(--t2)">In Chrome, Brave, or Edge go to:</p>
+          <code style="background:rgba(0,0,0,.35);padding:6px;border-radius:4px;font-size:11px;color:var(--cyan)">chrome://extensions</code>
+        </div>
+        <div class="ext-step-card">
+          <div style="display:flex;align-items:center;gap:10px"><span class="step-num">2</span><span style="font-size:13px;font-weight:700;color:#fff">Enable Developer Mode</span></div>
+          <p style="font-size:11.5px;color:var(--t2)">Toggle the <b>"Developer mode"</b> switch at the top-right corner.</p>
+        </div>
+        <div class="ext-step-card">
+          <div style="display:flex;align-items:center;gap:10px"><span class="step-num">3</span><span style="font-size:13px;font-weight:700;color:#fff">Load Unpacked Folder</span></div>
+          <p style="font-size:11.5px;color:var(--t2)">Click <b>"Load unpacked"</b> and choose:</p>
+          <code style="background:rgba(0,0,0,.35);padding:6px;border-radius:4px;font-size:10.5px;color:#a5b4fc">E:\Video Downloader\extension</code>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<!-- Toast -->
+<div id="toast" class="toast"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#f43f5e" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span id="toastMsg">Error</span></div>
+
+<script>
+// ============================================================
+// STATE
+// ============================================================
+let streamData=null, mp4On=true, dlDir='', torDir='', cookieMode='none', cookieFile='', tasks={};
+let interceptedStream=null, currentIgProfile=null;
+let currentTorrentSource='';  // path to .torrent OR magnet link
+let aria2Available=false;
+
+// ============================================================
+// INIT
+// ============================================================
+window.addEventListener('pywebviewready', async()=>{
+  try{
+    const s = await pywebview.api.get_system_info();
+    dlDir = torDir = s.default_download_dir;
+    document.getElementById('savePath').textContent = dlDir;
+    document.getElementById('torSavePath').textContent = torDir;
+    aria2Available = s.aria2c_available;
+    updateAria2Banner(aria2Available);
+  }catch(e){}
+});
+
+function updateAria2Banner(ok){
+  const banner=document.getElementById('aria2Banner');
+  const dot=document.getElementById('aria2Dot');
+  const txt=document.getElementById('aria2StatusText');
+  const sub=document.getElementById('aria2StatusSub');
+  const lnk=document.getElementById('aria2Link');
+  if(ok){
+    banner.classList.add('ok');
+    dot.classList.add('ok');
+    txt.textContent='aria2c engine ready ✓';
+    sub.textContent='Torrent downloads will run at full multi-connection speed.';
+    lnk.style.display='none';
+  }else{
+    txt.textContent='aria2c not found — download required';
+    sub.textContent='Without aria2c, torrent downloads cannot run. Click the link to install it.';
+    lnk.style.display='block';
+  }
+}
+
+// ============================================================
+// TAB SWITCHING
+// ============================================================
+function switchTab(id){
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.tab-page').forEach(p=>p.classList.remove('active'));
+  const map={downloader:['tabDownloader',0],instagram:['tabInstagram',1],torrent:['tabTorrent',2],extension:['tabExtension',3]};
+  const [pageId,btnIdx]=map[id]||['tabDownloader',0];
+  document.querySelectorAll('.tab-btn')[btnIdx].classList.add('active');
+  document.getElementById(pageId).classList.add('active');
+}
+
+// ============================================================
+// EXTENSION BRIDGE
+// ============================================================
+window.onExtensionStreamCaptured = function(data){
+  interceptedStream = data;
+  document.getElementById('toastStreamTitle').textContent = data.pageTitle || 'Stream Detected';
+  document.getElementById('toastStreamType').textContent = (data.streamType||'Video')+' • '+(data.url||'').substring(0,50)+'…';
+  const t=document.getElementById('streamInterceptToast');
+  t.style.display='flex';
+  setTimeout(()=>{t.style.display='none';},14000);
+};
+
+function acceptInterceptedStream(){
+  if(!interceptedStream)return;
+  dismissInterceptToast();
+  switchTab('downloader');
+  document.getElementById('url').value=interceptedStream.url||'';
+  // Set referer from pageUrl so CDN won't block
+  document.getElementById('referer').value=interceptedStream.pageUrl||'';
+  doFetch();
+}
+function dismissInterceptToast(){document.getElementById('streamInterceptToast').style.display='none';}
+
+// ============================================================
+// UNIVERSAL STREAM DOWNLOADER
+// ============================================================
+document.getElementById('url').addEventListener('keydown',e=>{if(e.key==='Enter')doFetch()});
+function tryUrl(u){document.getElementById('url').value=u;document.getElementById('referer').value='';doFetch();}
+async function doPaste(){
+  try{const t=await navigator.clipboard.readText();if(t){document.getElementById('url').value=t.trim();document.getElementById('referer').value='';doFetch();}}
+  catch(e){toast('Press Ctrl+V to paste.')}
+}
+function toggleMp4(){mp4On=!mp4On;const s=document.getElementById('mp4sw');mp4On?s.classList.add('on'):s.classList.remove('on');}
+async function onCookieChange(){
+  const m=document.getElementById('cookies').value;cookieMode=m;const d=document.getElementById('cfdisp');
+  if(m==='file'){const f=await pywebview.api.choose_cookie_file();if(f){cookieFile=f;d.style.display='inline';d.textContent=f.split('\\').pop();}else{document.getElementById('cookies').value='none';cookieMode='none';d.style.display='none';}}
+  else{cookieFile='';d.style.display='none';}
+}
+async function changeFolder(){try{const f=await pywebview.api.choose_folder();if(f){dlDir=f;document.getElementById('savePath').textContent=f;}}catch(e){}}
+async function openDlFolder(){try{await pywebview.api.open_folder(dlDir);}catch(e){}}
+
+async function doFetch(){
+  const u=document.getElementById('url').value.trim();
+  const ref=document.getElementById('referer').value.trim();
+  if(!u){toast('Paste a video stream URL first.');return;}
+  setLoading(true);hideToast();
+  try{
+    const r=await pywebview.api.fetch_info(u,cookieMode,cookieFile,ref);
+    if(!r.success){toast(r.error);return;}
+    streamData=r.data;renderResult(r.data);
+  }catch(e){toast('Fetch failed: '+e.message);}
+  finally{setLoading(false);}
+}
+
+function setLoading(b){
+  document.getElementById('fetchBtn').disabled=b;
+  document.getElementById('fetchTxt').textContent=b?'Analyzing…':'Inspect Stream';
+  document.getElementById('fetchSpin').style.display=b?'block':'none';
+}
+
+function renderResult(d){
+  const sec=document.getElementById('resultSec');sec.classList.add('show');
+  document.getElementById('vTitle').textContent=d.title||'Untitled';
+  document.getElementById('durBadge').textContent=d.duration_str||'Live';
+  document.getElementById('vUp').textContent=d.uploader||'Web';
+  document.getElementById('vType').textContent=d.stream_type||'Stream';
+  document.getElementById('vSite').textContent=d.site||'Web';
+  const th=document.getElementById('thumb');
+  th.src=d.thumbnail||'';
+  const qs=d.qualities||[];
+  document.getElementById('vQCnt').textContent=qs.length+' Qualities';
+  const g=document.getElementById('qGrid');g.innerHTML='';
+  qs.forEach(q=>{
+    const isAu=q.id==='bestaudio',isSingle=q.is_single;
+    let pc='qp',pt=q.resolution;
+    if(isAu){pc+=' au';pt='AUDIO';}
+    else if(q.height>=2160){pc+=' uhd';pt='4K';}
+    else if(q.height>=720){pc+=' hd';pt='HD';}
+    const te=isAu?(mp4On?'mp3':'m4a'):(mp4On?'mp4':q.ext);
+    const c=document.createElement('div');
+    c.className='qcard anim'+(isSingle?' single':'');
+    c.innerHTML=`<div class="qt"><div class="qr"><div class="ql">${esc(q.label)}</div><div class="qs">${esc(q.format_note)} • .${te}</div></div><span class="${pc}">${pt}</span></div><div class="qm"><div class="qmi">${esc(q.vcodec)}</div><div class="qmi">${esc(q.filesize)}</div></div><button class="qbtn" onclick="dlStart('${q.id}','${esc(q.label)}')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="8 17 12 21 16 17"/><line x1="12" y1="12" x2="12" y2="21"/></svg>Download ${esc(q.resolution)}</button>`;
+    g.appendChild(c);
+  });
+  sec.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,"&#39;");}
+
+async function dlStart(fid,label){
+  if(!streamData)return;
+  const tid='t_'+Date.now()+'_'+Math.floor(Math.random()*1e3);
+  const ref=document.getElementById('referer').value.trim();
+  addDlCard(tid,streamData.title,label,'dlList','dlPh','clearBtn');
+  try{await pywebview.api.start_download(streamData.url,fid,mp4On,dlDir,cookieMode,cookieFile,ref,parseInt(document.getElementById('threads').value)||8,tid);}
+  catch(e){window.onDownloadProgress({task_id:tid,status:'error',message:'Start failed: '+e.message});}
+}
+
+function addDlCard(tid,title,label,listId,phId,clearId){
+  const ph=document.getElementById(phId);if(ph)ph.style.display='none';
+  const cb=document.getElementById(clearId);if(cb)cb.style.display='inline-flex';
+  const l=document.getElementById(listId),c=document.createElement('div');
+  c.id='d_'+tid;c.className='dlc';
+  c.innerHTML=`<div class="dlh"><div class="dltb"><span class="dlt" title="${esc(title)}">${esc(title)}</span><span class="mc">${esc(label)}</span></div><span id="sc_${tid}" class="dlsc dl">Connecting…</span></div><div class="dlpt"><div id="pb_${tid}" class="dlpb" style="width:2%"></div></div><div class="dlsr"><span id="sl_${tid}">Connecting to stream…</span><span id="sr_${tid}">ETA: …</span></div><div class="dla" id="da_${tid}"><button class="dlab" onclick="doCancel('${tid}')"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>Cancel</button></div>`;
+  l.prepend(c);tasks[tid]=true;
+}
+
+window.onDownloadProgress=function(d){
+  const tid=d.task_id,st=d.status;
+  const sc=document.getElementById('sc_'+tid),pb=document.getElementById('pb_'+tid),
+        sl=document.getElementById('sl_'+tid),sr=document.getElementById('sr_'+tid),da=document.getElementById('da_'+tid);
+  if(!sc)return;
+  if(st==='downloading'){
+    sc.className='dlsc dl';
+    sc.textContent=Math.round(d.percent||0)+'%';
+    pb.style.width=Math.max(d.percent,3)+'%';
+    sl.textContent=(d.downloaded_str||'')+' / '+(d.total_str||'')+' • '+(d.speed_str||'');
+    sr.textContent='ETA: '+(d.eta_str||'');
+
+    // Live Swarm diagnostic for torrents when 0 seeders are online
+    if(tid.startsWith('tor_') && d.seeds === 0 && (!d.percent || d.percent <= 1)){
+      sc.className='dlsc pr';
+      sc.textContent='0 Seeds';
+      if(da && !da.querySelector('.tor-fallback-btn')){
+        const btn=document.createElement('button');
+        btn.className='dlab pr tor-fallback-btn';
+        btn.style.marginLeft='6px';
+        btn.style.borderColor='rgba(6,182,212,.5)';
+        btn.style.color='var(--cyan)';
+        btn.innerHTML='🔍 Direct Stream';
+        btn.title='Search and download direct web stream for this title without waiting for seeders';
+        btn.onclick=function(){
+          const c=document.getElementById('d_'+tid);
+          const name=c?(c.querySelector('.dlt')?.title||c.querySelector('.dlt')?.textContent):'';
+          findDirectStreamForTorrent(name);
+        };
+        da.prepend(btn);
+      }
+    }
+  }
+  else if(st==='processing'){sc.className='dlsc pr';sc.textContent='Muxing';pb.style.width='100%';sl.textContent=d.message||'Processing…';sr.textContent='Lossless';}
+  else if(st==='completed'){
+    sc.className='dlsc ok';sc.textContent='Done';pb.style.width='100%';pb.classList.add('ok');
+    sl.textContent='Saved: '+(d.filename||'')+' ('+(d.filesize||'')+')';sr.textContent='Original Quality';
+    const fp=d.filepath||'';
+    da.innerHTML='';
+    const bPlay=document.createElement('button');bPlay.className='dlab pr';
+    bPlay.innerHTML='<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>Play';
+    bPlay.addEventListener('click',()=>openFile(fp));
+    const bFold=document.createElement('button');bFold.className='dlab';
+    bFold.innerHTML='<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>Folder';
+    bFold.addEventListener('click',()=>openFolder(fp));
+    da.append(bPlay,bFold);
+  }
+  else if(st==='cancelled'){sc.className='dlsc cn';sc.textContent='Cancelled';sl.textContent='Cancelled by user.';sr.textContent='';da.innerHTML='';}
+  else if(st==='error'){sc.className='dlsc er';sc.textContent='Failed';sl.textContent=d.message||'Error';sr.textContent='';da.innerHTML='';}
+};
+
+async function doCancel(tid){
+  try{
+    if(tid && tid.startsWith('tor_')){
+      await pywebview.api.cancel_torrent_download(tid);
+    } else if(tid && tid.startsWith('ig_')){
+      await pywebview.api.cancel_instagram_download(tid);
+    } else {
+      await pywebview.api.cancel_download(tid);
+    }
+  }catch(e){}
+}
+async function openFile(f){try{await pywebview.api.open_file(f);}catch(e){toast('Cannot open: '+e.message);}}
+async function openFolder(f){try{await pywebview.api.open_folder(f);}catch(e){}}
+function clearDone(){const l=document.getElementById('dlList');l.querySelectorAll('.dlc').forEach(c=>{if(c.querySelector('.dlsc.ok,.dlsc.cn,.dlsc.er'))c.remove();});if(!l.querySelector('.dlc')){document.getElementById('dlPh').style.display='block';document.getElementById('clearBtn').style.display='none';}}
+
+// ============================================================
+// INSTAGRAM HUB
+// ============================================================
+document.getElementById('igInput').addEventListener('keydown',e=>{if(e.key==='Enter')fetchInstagramProfile();});
+function tryIg(u){document.getElementById('igInput').value=u;fetchInstagramProfile();}
+async function doPasteIg(){try{const t=await navigator.clipboard.readText();if(t){document.getElementById('igInput').value=t.trim();fetchInstagramProfile();}}catch(e){toast('Press Ctrl+V to paste.');}}
+
+async function fetchInstagramProfile(){
+  const query=document.getElementById('igInput').value.trim();
+  if(!query){toast('Please enter an Instagram username or URL.');return;}
+
+  setIgLoading(true);hideToast();
+
+  // Hide old data
+  document.getElementById('igProfileCard').classList.remove('show');
+  document.getElementById('igHighlightsSection').style.display='none';
+  document.getElementById('igMediaSection').style.display='none';
+  document.getElementById('igNoMediaNote').style.display='none';
+
+  try{
+    const res=await pywebview.api.fetch_instagram_profile(query,cookieMode,cookieFile);
+    if(!res.success){toast(res.error||'Could not fetch Instagram profile.');return;}
+    currentIgProfile=res.data;
+    renderInstagramProfile(res.data);
+  }catch(err){toast('Instagram error: '+err.message);}
+  finally{setIgLoading(false);}
+}
+
+function setIgLoading(b){
+  document.getElementById('igFetchBtn').disabled=b;
+  document.getElementById('igFetchTxt').textContent=b?'Fetching…':'Explore Profile';
+  document.getElementById('igFetchSpin').style.display=b?'block':'none';
+}
+
+let lastHeaderClick = 0;
+
+function handleHeaderMouseDown(e){
+  if(e.target.closest('.wc') || e.target.closest('.nav-tabs') || e.target.closest('button') || e.target.closest('input')) return;
+  const now = Date.now();
+  if(now - lastHeaderClick < 350){
+    pywebview.api.window_toggle_maximize();
+    lastHeaderClick = 0;
+    return;
+  }
+  lastHeaderClick = now;
+}
+
+function handleHeaderDblClick(e){
+  if(e.target.closest('.wc') || e.target.closest('.nav-tabs') || e.target.closest('button') || e.target.closest('input')) return;
+  pywebview.api.window_toggle_maximize();
+}
+
+function renderInstagramProfile(profile){
+  currentIgProfile = profile;
+  const card = document.getElementById('igProfileCard');
+  card.classList.add('show');
+
+  document.getElementById('igUname').textContent = '@' + profile.username;
+  document.getElementById('igFullName').textContent = profile.full_name || profile.username;
+  document.getElementById('igBio').textContent = profile.biography || '';
+  document.getElementById('igFollowersCnt').textContent = profile.followers || '0';
+  document.getElementById('igFollowingCnt').textContent = profile.following || '0';
+  document.getElementById('igPostsCnt').textContent = profile.posts_count || '0';
+  document.getElementById('igVerified').style.display = profile.is_verified ? 'inline-flex' : 'none';
+
+  const warnEl = document.getElementById('igWarn');
+  if(profile.warning){ warnEl.style.display = 'block'; warnEl.textContent = profile.warning; }
+  else { warnEl.style.display = 'none'; }
+
+  const avatar = document.getElementById('igAvatarImg');
+  if(profile.profile_pic_url){
+    avatar.src = profile.profile_pic_url;
+    avatar.onerror = () => { avatar.src = ''; };
+  }
+
+  // Story Highlights
+  const hls = profile.highlights || [];
+  const hlSec = document.getElementById('igHighlightsSection');
+  const hlGrid = document.getElementById('igHighlightsGrid');
+  if(hls && hls.length > 0){
+    hlSec.style.display = 'flex';
+    document.getElementById('igHighlightsCountBadge').textContent = hls.length + ' Highlights';
+    hlGrid.innerHTML = '';
+    hls.forEach(hl => {
+      const el = document.createElement('div');
+      el.className = 'ig-hl-card anim';
+      const coverSrc = hl.cover || '';
+      el.innerHTML = `
+        <div class="ig-hl-ring" onclick="openIgPageUrl('${esc(hl.page_url)}')">
+          <img class="ig-hl-cover" referrerpolicy="no-referrer" src="${esc(coverSrc)}" alt="" onerror="this.style.display='none'">
+        </div>
+        <span class="ig-hl-title" title="${esc(hl.title)}">${esc(hl.title)}</span>
+        <button class="ig-hl-dl-btn" onclick='downloadIgHighlight(${JSON.stringify(hl).replace(/'/g, "&#39;")})'>
+          Download
+        </button>
+      `;
+      hlGrid.appendChild(el);
+    });
+  } else {
+    hlSec.style.display = 'none';
+  }
+
+  // Media Grid
+  const items = profile.media || [];
+  if(items.length > 0){
+    const mediaSec = document.getElementById('igMediaSection');
+    mediaSec.style.display = 'flex';
+    document.getElementById('igMediaCountBadge').textContent = items.length + ' Items';
+    const grid = document.getElementById('igGrid'); grid.innerHTML = '';
+    items.forEach(m => {
+      const card = document.createElement('div');
+      card.className = 'ig-card anim';
+      const thumbSrc = m.thumbnail || '';
+      const pageUrl = m.page_url || `https://www.instagram.com/p/${m.shortcode}/`;
+      const isPhoto = m.type === 'photo';
+      card.innerHTML = `
+        <div class="ig-media-thumb" onclick="openIgPageUrl('${esc(pageUrl)}')">
+          <img class="ig-thumb-img" referrerpolicy="no-referrer" src="${esc(thumbSrc)}" alt="" onerror="this.style.display='none'">
+          <span class="ig-type-tag ${isPhoto ? 'photo-tag' : ''}">${m.type_label||m.type}</span>
+        </div>
+        <div class="ig-card-body">
+          <div class="ig-card-stats"><span>❤️ ${m.likes}</span><span>💬 ${m.comments}</span><span style="color:var(--t3)">${m.date}</span></div>
+          <div class="ig-card-caption">${esc(m.caption||'')}</div>
+          <div class="ig-action-row">
+            <button class="ig-dl-btn" style="flex:2" onclick='downloadIgMediaItem(${JSON.stringify(m).replace(/'/g, "&#39;")})'>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="8 17 12 21 16 17"/><line x1="12" y1="12" x2="12" y2="21"/></svg>
+              Download ${m.ext.toUpperCase()}
+            </button>
+            <button class="ig-open-btn" onclick="openIgPageUrl('${esc(pageUrl)}')">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+              Open
+            </button>
+          </div>
+        </div>`;
+      grid.appendChild(card);
+    });
+  } else {
+    document.getElementById('igNoMediaNote').style.display = 'flex';
+  }
+
+  card.scrollIntoView({behavior:'smooth', block:'nearest'});
+}
+
+function openIgPageUrl(url){
+  if(!url) return;
+  switchTab('downloader');
+  document.getElementById('url').value = url;
+  document.getElementById('referer').value = 'https://www.instagram.com/';
+  doFetch();
+}
+
+function downloadIgAvatar(){
+  if(!currentIgProfile || !currentIgProfile.profile_pic_url) return;
+  const url = currentIgProfile.profile_pic_url;
+  const uname = currentIgProfile.username || 'user';
+  startDirectIgDownload(url, 'photo', '', `${uname}_avatar.jpg`, `Avatar @${uname}`);
+}
+
+function downloadIgMediaItem(m){
+  const uname = currentIgProfile ? currentIgProfile.username : 'ig';
+  const isPhoto = m.type === 'photo';
+  const ext = isPhoto ? 'jpg' : 'mp4';
+  const hint = `${uname}_${m.shortcode || m.id || 'media'}.${ext}`;
+  const label = `${m.type_label || (isPhoto ? 'PHOTO' : 'VIDEO')} @${uname}`;
+  startDirectIgDownload(m.download_url || m.thumbnail, m.type, m.page_url, hint, label);
+}
+
+function downloadIgHighlight(hl){
+  const uname = currentIgProfile ? currentIgProfile.username : 'ig';
+  const cleanTitle = (hl.title || 'highlight').replace(/[^\w]/g, '_');
+  const hint = `${uname}_highlight_${cleanTitle}.mp4`;
+  const label = `Highlight: ${hl.title}`;
+  startDirectIgDownload(hl.cover || hl.page_url, 'highlight', hl.page_url, hint, label);
+}
+
+async function startDirectIgDownload(mediaUrl, mediaType, pageUrl, filenameHint, displayTitle){
+  const tid = 'ig_' + Date.now() + '_' + Math.floor(Math.random()*1e3);
+  const sec = document.getElementById('igDlSection');
+  if(sec) sec.style.display = 'flex';
+
+  const isPhoto = mediaType === 'photo';
+  const tag = isPhoto ? 'JPG Image' : 'MP4 Video';
+  addDlCard(tid, displayTitle || filenameHint, tag, 'igDlList', null, 'igClearBtn');
+
+  toast(`Downloading ${tag.toLowerCase()}: ${filenameHint}…`, true);
+  try {
+    await pywebview.api.download_instagram_item(mediaUrl, mediaType, pageUrl, dlDir, filenameHint, tid);
+  } catch(e) {
+    window.onDownloadProgress({task_id: tid, status: 'error', message: 'Download failed: ' + e.message});
+  }
+}
+
+function clearIgDone(){
+  const l = document.getElementById('igDlList');
+  if(!l) return;
+  l.querySelectorAll('.dlc').forEach(c => {
+    if(c.querySelector('.dlsc.ok,.dlsc.cn,.dlsc.er')) c.remove();
+  });
+  if(!l.querySelector('.dlc')){
+    const cb = document.getElementById('igClearBtn');
+    if(cb) cb.style.display = 'none';
+    const sec = document.getElementById('igDlSection');
+    if(sec) sec.style.display = 'none';
+  }
+}
+
+// ============================================================
+// TORRENT DOWNLOADER
+// ============================================================
+document.getElementById('magnetInput').addEventListener('keydown',e=>{if(e.key==='Enter')parseMagnet();});
+async function doPasteMagnet(){
+  try{const t=await navigator.clipboard.readText();if(t&&t.trim().startsWith('magnet:')){document.getElementById('magnetInput').value=t.trim();parseMagnet();}else{toast('Clipboard does not contain a magnet link.');}}
+  catch(e){toast('Press Ctrl+V to paste.');}
+}
+
+async function parseMagnet(){
+  const m=document.getElementById('magnetInput').value.trim();
+  if(!m){toast('Paste a magnet link first.');return;}
+  if(!m.startsWith('magnet:')){toast('That does not look like a valid magnet link.');return;}
+  currentTorrentSource=m;
+  await loadTorrentMeta(m);
+}
+
+async function chooseTorrentFile(){
+  try{
+    const path=await pywebview.api.choose_torrent_file();
+    if(path){
+      document.getElementById('torFilePath').textContent=path;
+      currentTorrentSource=path;
+      await loadTorrentMeta(path);
+    }
+  }catch(e){
+    toast('Could not open file dialog: ' + e.message);
+  }
+}
+
+function handleTorrentFileInput(input){
+  if(input.files && input.files.length > 0){
+    processTorrentFileObject(input.files[0]);
+    input.value = '';
+  }
+}
+
+function handleTorrentDrop(ev){
+  ev.preventDefault();
+  document.getElementById('torDropZone').classList.remove('drag-over');
+  const files = ev.dataTransfer.files;
+  if(files && files.length > 0){
+    processTorrentFileObject(files[0]);
+  }
+}
+
+function processTorrentFileObject(file){
+  if(!file.name.toLowerCase().endsWith('.torrent')){
+    toast('Please select a valid .torrent file.');
+    return;
+  }
+  toast('Loading torrent: ' + file.name, true);
+  const reader = new FileReader();
+  reader.onload = async function(e){
+    try{
+      const b64 = e.target.result.split(',')[1];
+      const res = await pywebview.api.upload_torrent_file(file.name, b64);
+      if(res.success){
+        currentTorrentSource = res.filepath;
+        document.getElementById('torFilePath').textContent = res.filepath;
+        renderTorrentInfo(res.data);
+        toast('Torrent loaded: ' + (res.data.name || file.name), true);
+      }else{
+        toast(res.error || 'Failed to read torrent.');
+      }
+    }catch(err){
+      toast('Upload error: ' + err.message);
+    }
+  };
+  reader.readAsDataURL(file);
+}
+
+async function loadTorrentMeta(source){
+  hideToast();
+  try{
+    const r=await pywebview.api.parse_torrent(source);
+    if(!r.success){toast(r.error);return;}
+    const d=r.data;
+    renderTorrentInfo(d);
+  }catch(e){toast('Parse error: '+e.message);}
+}
+
+let currentTorrentData = null;
+
+function renderTorrentInfo(d){
+  currentTorrentData = d;
+  document.getElementById('torName').textContent=d.name||'Unknown';
+  document.getElementById('torSize').textContent=d.total_size_str||'Unknown';
+  document.getElementById('torFileCount').textContent=(d.files||[]).length+' file(s)';
+  document.getElementById('torTrackerCount').textContent=(d.trackers||[]).length+' tracker(s)';
+
+  const cleanTitle = d.clean_title || d.name || 'Direct Stream';
+  const cleanEl = document.getElementById('torCleanTitle');
+  if(cleanEl) cleanEl.textContent = cleanTitle;
+
+  const fl=document.getElementById('torFileList');fl.innerHTML='';
+  (d.files||[]).forEach(f=>{
+    const el=document.createElement('div');el.className='tor-file-item';
+    el.innerHTML=`<span class="tor-file-name" title="${esc(f.path)}">${esc(f.path)}</span><span class="tor-file-size">${esc(f.size_str)}</span>`;
+    fl.appendChild(el);
+  });
+
+  document.getElementById('torInfoCard').classList.add('show');
+  document.getElementById('torDlBtn').disabled=!aria2Available;
+  document.getElementById('torInfoCard').scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+function cleanTitleClient(name){
+  if(!name) return '';
+  return name.replace(/^(?:www\.)?[a-zA-Z0-9.-]+\s*-\s*/i, '')
+             .replace(/(?:BR-Rip|HDRip|WEBRip|DVDRip|BluRay|HDTV|x264|x265|HEVC|AAC|DDP?|5\.1|1080p|720p|480p|2160p|4K|ESub|HQ|PRO|Proper).*/i, '')
+             .replace(/\b(?:English|Tamil|Hindi|Telugu|Malayalam|Kannada|Dual\s*Audio|Multi\s*Audio)\b.*/i, '')
+             .replace(/\[.*?\]/g, '')
+             .replace(/\(.*?\)/g, m => /\d{4}/.test(m) ? m : '')
+             .replace(/^[ -_.]+|[ -_.]+$/g, '')
+             .trim() || name;
+}
+
+function findDirectStreamForTorrent(titleOverride){
+  let t = titleOverride || (currentTorrentData ? (currentTorrentData.clean_title || currentTorrentData.name) : '') || document.getElementById('torCleanTitle')?.textContent || '';
+  t = cleanTitleClient(t.trim());
+  if(!t || t === '—'){
+    toast('No torrent title detected.');
+    return;
+  }
+  switchTab('downloader');
+  const inp = document.getElementById('url');
+  if(inp) inp.value = t;
+  toast('Searching stream for: ' + t, true);
+  doFetch();
+}
+
+async function changeTorFolder(){try{const f=await pywebview.api.choose_folder();if(f){torDir=f;document.getElementById('torSavePath').textContent=f;}}catch(e){}}
+async function openTorFolder(){try{await pywebview.api.open_folder(torDir);}catch(e){}}
+
+async function startTorrentDownload(){
+  if(!currentTorrentSource){toast('No torrent loaded.');return;}
+  if(!aria2Available){toast('aria2c is required for torrent downloads. Download it from aria2.github.io');return;}
+
+  const tid='tor_'+Date.now()+'_'+Math.floor(Math.random()*1e3);
+  const torName=document.getElementById('torName').textContent||'Torrent';
+  addDlCard(tid,torName,'Torrent','torDlList','torDlPh','torClearBtn');
+
+  try{
+    await pywebview.api.start_torrent_download(currentTorrentSource,torDir,tid);
+  }catch(e){
+    window.onDownloadProgress({task_id:tid,status:'error',message:'Start failed: '+e.message});
+  }
+}
+
+function clearTorDone(){const l=document.getElementById('torDlList');l.querySelectorAll('.dlc').forEach(c=>{if(c.querySelector('.dlsc.ok,.dlsc.cn,.dlsc.er'))c.remove();});if(!l.querySelector('.dlc')){document.getElementById('torDlPh').style.display='block';document.getElementById('torClearBtn').style.display='none';}}
+
+// ============================================================
+// SHARED UTILITIES
+// ============================================================
+function toast(m,ok=false){
+  const t=document.getElementById('toast');
+  t.className='toast'+(ok?' ok':'');
+  document.getElementById('toastMsg').textContent=m;
+  t.style.display='flex';
+  clearTimeout(t._to);
+  t._to=setTimeout(()=>t.style.display='none',7000);
+}
+function hideToast(){document.getElementById('toast').style.display='none';}
+</script>
+</body>
+</html>

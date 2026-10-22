@@ -1,0 +1,9 @@
+yt-dlp>=2026.8.19
+pywebview>=6.2.1
+imageio-ffmpeg>=0.6.0
+curl_cffi>=0.16.3
+requests>=2.30.0
+instaloader>=4.15.0
+instagrapi>=3.1.0
+torf>=4.3.1
+torrentool>=1.2.0

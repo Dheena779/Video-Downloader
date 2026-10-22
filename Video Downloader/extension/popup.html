@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OmniStream Sniffer</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      width: 360px;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0b0f17;
+      color: #f1f5f9;
+      padding: 14px;
+      user-select: none;
+    }
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      padding-bottom: 10px;
+      margin-bottom: 12px;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .logo {
+      width: 22px;
+      height: 22px;
+      border-radius: 6px;
+      background: linear-gradient(135deg, #06b6d4, #8b5cf6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .title {
+      font-size: 13px;
+      font-weight: 700;
+      color: #fff;
+    }
+    .status {
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: rgba(16, 185, 129, 0.15);
+      color: #10b981;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .status.offline {
+      background: rgba(244, 63, 94, 0.15);
+      color: #f43f5e;
+    }
+    .stream-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 380px;
+      overflow-y: auto;
+    }
+    .stream-card {
+      background: rgba(18, 24, 38, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 8px;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .stream-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .badge {
+      font-size: 9.5px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 3px;
+      background: rgba(6, 182, 212, 0.15);
+      color: #06b6d4;
+    }
+    .size {
+      font-size: 10px;
+      color: #94a3b8;
+    }
+    .url-text {
+      font-size: 10.5px;
+      color: #cbd5e1;
+      font-family: monospace;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      background: rgba(0, 0, 0, 0.3);
+      padding: 4px 6px;
+      border-radius: 4px;
+    }
+    .btn-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn {
+      flex: 1;
+      background: linear-gradient(135deg, #06b6d4, #3b82f6);
+      border: none;
+      color: #fff;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 6px 10px;
+      border-radius: 5px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+    }
+    .btn:hover {
+      opacity: 0.9;
+    }
+    .btn-copy {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #e2e8f0;
+      padding: 6px 8px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 11px;
+    }
+    .empty {
+      text-align: center;
+      padding: 24px 0;
+      color: #64748b;
+      font-size: 11.5px;
+      line-height: 1.5;
+    }
+    .progress { height: 5px; border-radius: 3px; background: rgba(255,255,255,0.08); overflow: hidden; }
+    .progress > div { height: 100%; width: 0; background: linear-gradient(90deg, #06b6d4, #8b5cf6); transition: width .3s; }
+    .progress > div.done { background: #10b981; }
+    .progress > div.err { background: #f43f5e; }
+    .jstatus { font-size: 10.5px; color: #94a3b8; display: flex; justify-content: space-between; gap: 6px; }
+    .jstatus .err { color: #f43f5e; }
+    .jstatus .warn { color: #f59e0b; }
+    .btn[disabled] { opacity: .55; cursor: default; }
+    .btn.secondary { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.1); color: #e2e8f0; flex: 0 0 auto; }
+    .setting { display: flex; align-items: center; gap: 6px; font-size: 10.5px; color: #94a3b8; margin-bottom: 10px; cursor: pointer; }
+    .setting input { accent-color: #06b6d4; }
+    select.q { background: #121826; color: #e2e8f0; border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; font-size: 10.5px; padding: 3px; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="brand">
+      <div class="logo">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+      </div>
+      <span class="title">OmniStream Sniffer</span>
+    </div>
+    <div id="statusBadge" class="status">● Bridge Online</div>
+  </div>
+
+  <label class="setting"><input type="checkbox" id="autoCache"> Auto-cache HLS segments in the extension for instant download</label>
+
+  <div id="streamList" class="stream-list">
+    <div class="empty">
+      No video streams detected on this tab yet.<br>
+      Play a video on the page to intercept.
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
